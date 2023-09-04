@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { AuthContext } from "../context/AuthContext";
+
 const Search = () => {
   const [username, setUsername] = useState("");
   const [user, setUser] = useState(null);
@@ -30,17 +31,15 @@ const Search = () => {
       querySnapshot.forEach((doc) => {
         setUser(doc.data());
       });
+      setErr(false); // Clear any previous error message
     } catch (err) {
+      setUser(null);
       setErr(true);
     }
   };
 
-  const handleKey = (e) => {
-    e.code === "Enter" && handleSearch();
-  };
-
   const handleSelect = async () => {
-    //check whether the group(chats in firestore) exists, if not create
+    // Check whether the group (chats in Firestore) exists, if not create
     const combinedId =
       currentUser.uid > user.uid
         ? currentUser.uid + user.uid
@@ -49,10 +48,10 @@ const Search = () => {
       const res = await getDoc(doc(db, "chats", combinedId));
 
       if (!res.exists()) {
-        //create a chat in chats collection
+        // Create a chat in chats collection
         await setDoc(doc(db, "chats", combinedId), { messages: [] });
 
-        //create user chats
+        // Create user chats
         await updateDoc(doc(db, "userChats", currentUser.uid), {
           [combinedId + ".userInfo"]: {
             uid: user.uid,
@@ -76,16 +75,17 @@ const Search = () => {
     setUser(null);
     setUsername("");
   };
+
   return (
     <div className="search">
       <div className="searchForm">
         <input
           type="search"
           placeholder="Find a user"
-          onKeyDown={handleKey}
           onChange={(e) => setUsername(e.target.value)}
           value={username}
         />
+        <button onClick={handleSearch}>Search</button>{" "}
       </div>
       {err && <span>User not found!</span>}
       {user && (
